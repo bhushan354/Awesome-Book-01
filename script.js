@@ -1,74 +1,197 @@
-const bookList = document.getElementById('book-list');
 
-const books = [
-  {
-    title: 'Lorem Ipsum',
-    author: 'Testeroo Testyy',
-  },
-  {
-    title: 'Second Book',
-    author: 'Testeroo Testyy',
-  },
-];
+document.addEventListener('DOMContentLoaded', () => {
+  pages();
+  getPageContent('home');
 
-function display() {
-  bookList.innerHTML = '';
-  let displayBook = '';
-  for (let i = 0; i < books.length; i += 1) {
-    displayBook += `
-      <div class="card">
-        <p>${books[i].title}</p>
-        <p>${books[i].author}</p>
-        <button type="button" class="remove-btn">Remove</button>
-        <hr/>
-      </div>
-    `;
-  }
-  bookList.innerHTML = displayBook;
+  const ui = new UI();
+  const books = UI.getBooksFromLocalStorage();
+  books.forEach((book) => ui.addBook(book));
 
-  function removeBook(index) {
-    books.splice(index, 1);
-    localStorage.setItem('books', JSON.stringify(books));
-    display();
-  }
+  document.addEventListener('submit', (e) => {
+    if (e.target.classList.contains('submit')) {
+      const ui = new UI();
 
-  const removeButtons = document.querySelectorAll('.remove-btn');
-  removeButtons.forEach((button, index) => {
-    button.addEventListener('click', () => removeBook(index));
+      ui.deleteBook(e.target);
+
+      ui.showAlert('Book Removed', 'success');
+
+      e.preventDefault();
+    }
   });
+});
+
+function pages() {
+  return {
+    home: `
+    <section id="library">
+            <h1>All awesome Books</h1>
+            <div id="book-list" class="book-list">
+                
+            </div>
+    </section>
+  `,
+
+    addnew: `
+    <section id="newbook">
+            <div>
+                <h2>Add a new book</h2>
+            </div>
+            <form id="book-form" class="book-form">
+                <div>
+                    <input type="text" id="title" class="title" placeholder="Title">
+                </div>
+                <div>
+                    <input type="text" id="author" class="author" placeholder="Author">
+                </div>
+                <div>
+                    <button type="submit" id="btn" class="btn">Add</button>
+                </div>
+            </form>
+    </section>
+  `,
+    contact: `
+    <section id="contact">
+            <h2>Contact Information</h2>
+            <p>Do you have any questions or you just want to say "Hello"? <br>
+                You can reach out to us!</p><br>
+            <ul class="contact-list">
+                <li>Our e-mail: thebestlibrary@book.com</li>
+                <li>Our phone number: +12345678912</li>
+                <li>Our address: 5th Villa, Calm str, Happy Republic</li>
+            </ul>
+    </section>
+  `,
+  };
 }
 
-display();
-
-function addBook(event) {
-  event.preventDefault();
-
-  const title1 = document.getElementById('title').value;
-  const author1 = document.getElementById('author').value;
-
-  const newBook = { title: title1, author: author1 };
-  books.push(newBook);
-
-  localStorage.setItem('books', JSON.stringify(books));
-
-  display();
-  document.getElementById('title').value = '';
-  document.getElementById('author').value = '';
+function getPageContent(page) {
+  let contentToReturn;
+  switch (page) {
+    case 'home':
+      contentToReturn = pages().home;
+      break;
+    case 'addnew':
+      contentToReturn = pages().addnew;
+      document.getElementById('content').innerHTML = contentToReturn;
+      break;
+    case 'contact':
+      contentToReturn = pages().contact;
+      document.getElementById('content').innerHTML = contentToReturn;
+      break;
+    default:
+  }
+  document.getElementById('content').innerHTML = contentToReturn;
 }
 
-function loadBooksFromLocalStorage() {
-  const storedBooks = localStorage.getItem('books');
-  if (storedBooks) {
-    books.push(...JSON.parse(storedBooks));
+class Book {
+  constructor(title, author) {
+    this.title = title;
+    this.author = author;
   }
 }
 
-const addBtn = document.querySelector('.btn');
-addBtn.addEventListener('click', addBook);
+class UI {
+  addBook(book) {
+    const title = document.getElementById('book');
+    this.title = title;
+    const list = document.getElementById('book-list');
+    const flex = document.createElement('div');
+    flex.classList.add('lists');
+    flex.innerHTML = `
 
-function clearLocalStorage() {
-  localStorage.removeItem('books');
+    <p><span>"${book.title}"</span>  by  <span>${book.author}</span></p>
+    <button type="submit" class="submit">Remove</button>
+   
+    `;
+
+    list.appendChild(flex);
+    
+  }
+
+    // New function to save book to local storage
+    saveToLocalStorage(book) {
+      let books;
+      if (localStorage.getItem('books') === null) {
+        books = [];
+      } else {
+        books = JSON.parse(localStorage.getItem('books'));
+      }
+      books.push(book);
+      localStorage.setItem('books', JSON.stringify(books));
+    }
+  
+
+   // New function to retrieve books from local storage
+   static getBooksFromLocalStorage() {
+    let books;
+    if (localStorage.getItem('books') === null) {
+      books = [];
+    } else {
+      books = JSON.parse(localStorage.getItem('books'));
+    }
+    return books;
+  }
+
+  showAlert(message, className) {
+    const title = document.getElementById('book');
+    this.title = title;
+    const div = document.createElement('div');
+    div.className = `alert ${className} `;
+    div.appendChild(document.createTextNode(message));
+
+    const container = document.getElementById('newbook');
+    const form = document.querySelector('form');
+
+    container.insertBefore(div, form);
+
+    setTimeout(() => {
+      document.querySelector('.alert').remove();
+    }, 2000);
+  }
+
+  deleteBook(target) {
+    const title = document.getElementById('book');
+    this.title = title;
+    if (target.classList.contains('submit')) {
+      target.parentElement.remove();
+    }
+  }
+
+  clearFields() {
+    const title = document.getElementById('book');
+    this.title = title;
+    document.getElementById('title').value = '';
+    document.getElementById('author').value = '';
+  }
 }
 
-loadBooksFromLocalStorage();
-window.addEventListener('beforeunload', clearLocalStorage);
+const bookList = document.querySelector('#book-list');
+
+bookList.addEventListener('submit',
+  (e) => {
+    const title = document.getElementById('title').value;
+    const author = document.getElementById('author').value;
+
+    const book = new Book(title, author);
+
+    const ui = new UI();
+
+    if (title === '' || author === '') {
+      ui.showAlert('Please fill in all fields', 'error');
+    } else {
+      ui.addBook(book);
+ ui.saveToLocalStorage(book); // Save book to local storage
+      ui.showAlert('Book Added', 'success');
+
+      ui.clearFields();
+    }
+    e.preventDefault();
+  });
+
+
+const time = document.getElementById('time');
+
+setInterval(() => {
+  const date = new Date();
+  time.innerHTML = date.toLocaleTimeString();
+}, 1000);
